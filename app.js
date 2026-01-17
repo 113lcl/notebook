@@ -141,6 +141,13 @@ function setupEventListeners() {
     if (deleteNoteBtn) deleteNoteBtn.addEventListener('click', showDeleteConfirm);
     if (editModalClose) editModalClose.addEventListener('click', closeEditNoteModal);
 
+    // Модальное окно редактирования списков
+    const saveListBtn = document.getElementById('saveListBtn');
+    const editListModalClose = document.querySelector('#editListModal .modal-close');
+    
+    if (saveListBtn) saveListBtn.addEventListener('click', saveList);
+    if (editListModalClose) editListModalClose.addEventListener('click', closeEditListModal);
+
     // Модальное окно подтверждения удаления
     const confirmDeleteCancel = document.getElementById('confirmDeleteCancel');
     const confirmDeleteConfirm = document.getElementById('confirmDeleteConfirm');
@@ -162,6 +169,13 @@ function setupEventListeners() {
     document.getElementById('editNoteModal').addEventListener('click', (e) => {
         if (e.target.id === 'editNoteModal') closeEditNoteModal();
     });
+
+    const editListModal = document.getElementById('editListModal');
+    if (editListModal) {
+        editListModal.addEventListener('click', (e) => {
+            if (e.target.id === 'editListModal') closeEditListModal();
+        });
+    }
 
     // Обработка свайпа для навигации
     setupSwipeNavigation();
@@ -504,12 +518,13 @@ function renderShoppingList() {
         if (item.items) {
             const itemsHtml = item.items.map((subitem, subindex) => `
                 <div class="list-item">
-                    <input type="checkbox" ${subitem.completed ? 'checked' : ''} 
-                           onchange="toggleListItem('shopping', ${index}, ${subindex})">
-                    <span>${escapeHtml(subitem.text)}</span>
+                    <button type="button" class="list-checkbox-btn" onclick="toggleListItem('shopping', ${index}, ${subindex}); event.stopPropagation();" style="background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center;">
+                        <input type="checkbox" ${subitem.completed ? 'checked' : ''} style="pointer-events: none;">
+                    </button>
+                    <span onclick="editList('shopping', ${index}); event.stopPropagation();" style="cursor: pointer; flex: 1;">${escapeHtml(subitem.text)}</span>
                 </div>
             `).join('');
-            return `<div class="list-container">${itemsHtml}<button class="item-delete" onclick="deleteItem('shopping', ${index})">×</button></div>`;
+            return `<div class="list-container">${itemsHtml}</div>`;
         }
         return '';
     }).join('');
@@ -529,12 +544,13 @@ function renderCleaningList() {
         if (item.items) {
             const itemsHtml = item.items.map((subitem, subindex) => `
                 <div class="list-item">
-                    <input type="checkbox" ${subitem.completed ? 'checked' : ''} 
-                           onchange="toggleListItem('cleaning', ${index}, ${subindex})">
-                    <span>${escapeHtml(subitem.text)}</span>
+                    <button type="button" class="list-checkbox-btn" onclick="toggleListItem('cleaning', ${index}, ${subindex}); event.stopPropagation();" style="background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center;">
+                        <input type="checkbox" ${subitem.completed ? 'checked' : ''} style="pointer-events: none;">
+                    </button>
+                    <span onclick="editList('cleaning', ${index}); event.stopPropagation();" style="cursor: pointer; flex: 1;">${escapeHtml(subitem.text)}</span>
                 </div>
             `).join('');
-            return `<div class="list-container">${itemsHtml}<button class="item-delete" onclick="deleteItem('cleaning', ${index})">×</button></div>`;
+            return `<div class="list-container">${itemsHtml}</div>`;
         }
         return '';
     }).join('');
@@ -815,6 +831,124 @@ function deleteItem(type, index) {
     app.deleteConfirmIndex = index;
     document.getElementById('confirmDeleteText').textContent = 'Вы уверены, что хотите удалить этот элемент?';
     document.getElementById('confirmDeleteModal').classList.remove('hidden');
+}
+
+// Редактирование списка
+function editList(type, index) {
+    const items = getItemsForDay(type);
+    const item = items[index];
+    
+    app.editingNoteId = index;
+    app.editingNoteType = type;
+    
+    // Заполняем модальное окно списком элементов
+    const listItems = document.getElementById('editListItems');
+    listItems.innerHTML = '';
+    
+    if (item.items) {
+        item.items.forEach((subitem, subindex) => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            const span = document.createElement('span');
+            span.textContent = subitem.text;
+            span.style.cursor = 'pointer';
+            span.onclick = () => editListItem(subindex);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'item-delete-button';
+            deleteBtn.textContent = '×';
+            deleteBtn.onclick = () => deleteListItem(subindex);
+            
+            div.appendChild(span);
+            div.appendChild(deleteBtn);
+            listItems.appendChild(div);
+        });
+    }
+    
+    updateEditListCharCount();
+    document.getElementById('editListModal').classList.remove('hidden');
+}
+
+function toggleListItemCheck(index) {
+    const items = getItemsForDay(app.editingNoteType);
+    const item = items[app.editingNoteId];
+    if (item.items && item.items[index]) {
+        item.items[index].completed = !item.items[index].completed;
+    }
+}
+
+function editListItem(subindex) {
+    const items = getItemsForDay(app.editingNoteType);
+    const item = items[app.editingNoteId];
+    if (item.items && item.items[subindex]) {
+        const subitem = item.items[subindex];
+        
+        // Находим элемент в DOM
+        const listItemsDiv = document.getElementById('editListItems');
+        const listItemDivs = listItemsDiv.querySelectorAll('.list-item');
+        const itemDiv = listItemDivs[subindex];
+        
+        if (itemDiv) {
+            const span = itemDiv.querySelector('span');
+            
+            // Создаем инпут для редактирования
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = subitem.text;
+            input.maxLength = 60;
+            input.style.cssText = 'flex: 1; border: none; background: transparent; padding: 0; font-size: 16px; font-family: inherit;';
+            
+            // Заменяем span на input
+            itemDiv.replaceChild(input, span);
+            input.focus();
+            input.select();
+            
+            // Обработчик сохранения при нажатии Enter или потере фокуса
+            const save = () => {
+                const newText = input.value.trim();
+                if (newText) {
+                    subitem.text = newText;
+                    saveData();
+                }
+                editList(app.editingNoteType, app.editingNoteId);
+            };
+            
+            input.onblur = save;
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    save();
+                }
+            };
+        }
+    }
+}
+
+function deleteListItem(index) {
+    const items = getItemsForDay(app.editingNoteType);
+    const item = items[app.editingNoteId];
+    if (item.items) {
+        item.items.splice(index, 1);
+        editList(app.editingNoteType, app.editingNoteId);
+    }
+}
+function updateEditListCharCount() {
+    // Пустая функция, оставлена для совместимости
+}
+
+function saveList() {
+    saveData();
+    closeEditListModal();
+    renderContent();
+}
+
+function closeEditListModal() {
+    const modal = document.getElementById('editListModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    app.editingNoteId = null;
+    app.editingNoteType = null;
 }
 
 // Редактирование заметки

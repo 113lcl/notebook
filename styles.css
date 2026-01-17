@@ -346,8 +346,21 @@ html, body {
 .item input[type="checkbox"] {
     width: 20px;
     height: 20px;
+    min-width: 20px;
+    min-height: 20px;
     cursor: pointer;
+    border-radius: 50%;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: transparent;
+    border: 2px solid #c7c7cc;
     accent-color: var(--success-color);
+    transition: all 0.2s;
+}
+
+.item input[type="checkbox"]:checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
 }
 
 .item.completed {
@@ -385,14 +398,26 @@ html, body {
 }
 
 .item-delete {
-    background: none;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 50%;
+    background-color: #f0f0f2;
     border: none;
-    color: var(--danger-color);
+    color: #8e8e93;
     cursor: pointer;
-    font-size: 18px;
-    padding: 4px 8px;
-    border-radius: 4px;
+    font-size: 16px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s;
+}
+
+.item-delete:active {
+    background-color: #e0e0e5;
+    color: var(--danger-color);
 }
 
 .item-delete:hover {
@@ -980,15 +1005,12 @@ html, body {
 .list-items {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     margin-bottom: 16px;
     max-height: 280px;
     overflow-y: auto;
-    padding-right: 4px;
-    padding: 8px;
-    background-color: rgba(124, 92, 255, 0.03);
-    border-radius: 12px;
-    border: 1px solid rgba(124, 92, 255, 0.1);
+    padding: 0;
+    background-color: transparent;
 }
 
 .list-items:empty {
@@ -999,13 +1021,14 @@ html, body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     background: white;
-    border-radius: 8px;
+    border-radius: 12px;
     border-left: 3px solid var(--primary-color);
     animation: slideIn 0.25s ease-out;
     position: relative;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    flex-wrap: nowrap;
 }
 
 @keyframes slideIn {
@@ -1020,40 +1043,69 @@ html, body {
 }
 
 .list-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
     cursor: pointer;
     flex-shrink: 0;
-    accent-color: var(--primary-color);
+    border-radius: 50%;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: transparent;
+    border: 2px solid #c7c7cc;
+    transition: all 0.2s;
+}
+
+.list-item input[type="checkbox"]:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    background-image: url('data:image/svg+xml,<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8L7 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 60%;
 }
 
 .list-item span {
     flex: 1;
     font-size: 15px;
     color: var(--text-primary);
-    word-break: break-word;
+    line-height: 1.4;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .list-item button {
-    background: none;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 50%;
+    background-color: #f0f0f2;
     border: none;
-    color: var(--danger-color);
+    color: #8e8e93;
     cursor: pointer;
-    font-size: 20px;
-    padding: 4px 8px;
+    font-size: 16px;
+    padding: 0;
     flex-shrink: 0;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .list-item button:active {
-    transform: scale(1.2);
+    background-color: #e0e0e5;
+    color: var(--danger-color);
 }
 
 /* Контейнер для списков в контенте */
 .list-container {
-    background-color: var(--secondary-color);
-    border-radius: 8px;
-    padding: 12px;
+    background-color: transparent;
+    border-radius: 12px;
+    padding: 0;
     margin-bottom: 12px;
     display: flex;
     flex-direction: column;
@@ -1062,18 +1114,75 @@ html, body {
 }
 
 .list-container .list-item {
-    background-color: transparent;
-    padding: 8px 0;
+    background-color: var(--secondary-color);
+    padding: 10px 12px;
+    border-left: none;
+    box-shadow: none;
+    flex-wrap: nowrap;
+}
+
+.list-container .list-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+}
+
+.list-container .list-item span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .list-container .item-delete {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: none;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 50%;
+    background-color: #f0f0f2;
     border: none;
-    color: var(--danger-color);
+    color: #8e8e93;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 16px;
     padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    position: static;
+    flex-shrink: 0;
+}
+
+.list-container .item-delete:active {
+    background-color: #e0e0e5;
+    color: var(--danger-color);
+}
+
+/* Кнопка удаления для контейнера списков */
+.item-delete-container {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 50%;
+    background-color: #f0f0f2;
+    border: none;
+    color: #8e8e93;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+    align-self: flex-start;
+}
+
+.item-delete-container:active {
+    background-color: #e0e0e5;
+    color: var(--danger-color);
 }
