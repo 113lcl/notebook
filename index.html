@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Дневник">
+    <meta name="theme-color" content="#7c5cff">
+    <meta name="description" content="Приложение личного дневника с календарем, задачами и заметками">
+    <meta name="keywords" content="дневник, календарь, задачи, заметки">
+    
+    <!-- Иконки для iOS -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%237c5cff' width='180' height='180' rx='40'/><text x='50%' y='50%' font-size='100' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'>📔</text></svg>">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <title>Личный Дневник</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Боковая панель с календарем -->
+        <aside class="sidebar">
+            <div class="time-display">
+                <span class="time" id="currentTime">00:00</span>
+            </div>
+            
+            <div class="calendar desktop-calendar">
+                <div class="calendar-header">
+                    <button id="prevMonth" class="calendar-nav">&lt;</button>
+                    <div class="calendar-title">
+                        <span id="monthYear">Январь 2026</span>
+                    </div>
+                    <button id="nextMonth" class="calendar-nav">&gt;</button>
+                </div>
+                
+                <div class="calendar-weekdays">
+                    <div>Пн</div>
+                    <div>Вт</div>
+                    <div>Ср</div>
+                    <div>Чт</div>
+                    <div>Пт</div>
+                    <div>Сб</div>
+                    <div>Вс</div>
+                </div>
+                
+                <div class="calendar-days" id="calendarDays"></div>
+            </div>
+
+            <!-- Горизонтальное меню дат для мобильной версии -->
+            <div class="mobile-date-picker">
+                <button id="prevWeek" class="week-nav">&lt;</button>
+                <div class="dates-scroll" id="datesScroll"></div>
+                <button id="nextWeek" class="week-nav">&gt;</button>
+            </div>
+        </aside>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <div class="date-header">
+                <h2 id="selectedDate">Сегодня</h2>
+            </div>
+
+            <!-- Привычки -->
+            <section class="section">
+                <div class="section-header">
+                    <h3>🎯 Привычки</h3>
+                    <button class="add-btn" data-type="habits">+</button>
+                </div>
+                <div class="section-content">
+                    <div id="habitsList" class="items-list"></div>
+                </div>
+            </section>
+
+            <!-- Задачи -->
+            <section class="section">
+                <div class="section-header">
+                    <h3>📋 Задачи</h3>
+                    <button class="add-btn" data-type="tasks">+</button>
+                </div>
+                <div class="section-content">
+                    <div id="tasksList" class="items-list"></div>
+                </div>
+            </section>
+
+            <!-- Задачи на завтра -->
+            <section class="section">
+                <div class="section-header">
+                    <h3>⏭️ Задачи на завтра</h3>
+                    <button class="add-btn" data-type="tomorrow">+</button>
+                </div>
+                <div class="section-content">
+                    <div id="tomorrowList" class="items-list"></div>
+                </div>
+            </section>
+
+            <!-- Заметки -->
+            <section class="section">
+                <div class="section-header">
+                    <h3>📝 Заметки</h3>
+                    <button class="add-btn" data-type="notes">+</button>
+                </div>
+                <div class="section-content">
+                    <div id="notesList" class="notes-list"></div>
+                </div>
+            </section>
+
+            <!-- Дневник благодарности -->
+            <section class="section">
+                <div class="section-header">
+                    <h3>🙏 Дневник благодарности</h3>
+                    <button class="add-btn" data-type="gratitude">+</button>
+                </div>
+                <div class="section-content">
+                    <div id="gratitudeList" class="notes-list"></div>
+                </div>
+            </section>
+
+            <!-- Триггеры неудач -->
+            <section class="section">
+                <div class="section-header">
+                    <h3>⚠️ Триггеры неудач</h3>
+                    <button class="add-btn" data-type="triggers">+</button>
+                </div>
+                <div class="section-content">
+                    <div id="triggersList" class="items-list"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Модальное окно для добавления -->
+    <div id="addModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h3 id="modalTitle">Добавить</h3>
+            
+            <div class="form-group">
+                <label for="itemText">Текст:</label>
+                <textarea id="itemText" placeholder="Введите текст..." rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="itemDate">Дата:</label>
+                <input type="date" id="itemDate">
+            </div>
+
+            <div class="form-group">
+                <label for="itemTime">Время:</label>
+                <input type="time" id="itemTime">
+            </div>
+
+            <div class="form-actions">
+                <button id="cancelBtn" class="btn-secondary">Отмена</button>
+                <button id="saveBtn" class="btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для редактирования заметок -->
+    <div id="editNoteModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h3>Редактировать заметку</h3>
+            
+            <div class="form-group">
+                <label for="noteText">Текст:</label>
+                <textarea id="noteText" placeholder="Введите текст заметки..." rows="5"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button id="deleteNoteBtn" class="btn-danger">Удалить</button>
+                <button id="cancelNoteBtn" class="btn-secondary">Отмена</button>
+                <button id="saveNoteBtn" class="btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Регистрация Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').then((reg) => {
+                console.log('Service Worker зарегистрирован', reg);
+            }).catch((err) => {
+                console.log('Ошибка регистрации Service Worker:', err);
+            });
+        }
+        
+        // Обработка установки приложения
+        let installPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            installPrompt = e;
+        });
+    </script>
+</body>
+</html>

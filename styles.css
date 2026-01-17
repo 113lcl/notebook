@@ -1,0 +1,771 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #7c5cff;
+    --secondary-color: #f5f5f7;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+    --border-color: #e0e0e0;
+    --success-color: #34c759;
+    --danger-color: #ff3b30;
+    --bg-light: #f9f9fb;
+    --safe-area-top: max(0px, env(safe-area-inset-top));
+    --safe-area-bottom: max(0px, env(safe-area-inset-bottom));
+    --safe-area-left: max(0px, env(safe-area-inset-left));
+    --safe-area-right: max(0px, env(safe-area-inset-right));
+}
+
+html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+}
+
+/* Боковая панель */
+.sidebar {
+    width: 280px;
+    background-color: var(--secondary-color);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.time-display {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.time {
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--text-primary);
+}
+
+/* Календарь */
+.calendar {
+    background-color: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.calendar-title {
+    font-weight: 600;
+    font-size: 14px;
+    flex: 1;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.calendar-nav {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 5px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.calendar-nav:hover {
+    background-color: var(--bg-light);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.calendar-weekdays div {
+    padding: 5px 0;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: var(--text-primary);
+}
+
+.calendar-day.other-month {
+    color: var(--text-secondary);
+    cursor: default;
+}
+
+.calendar-day:not(.other-month):hover {
+    background-color: var(--bg-light);
+}
+
+.calendar-day.selected {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+.calendar-day.today {
+    background-color: var(--success-color);
+    color: white;
+    font-weight: 600;
+}
+
+/* Горизонтальное меню дат для мобильной версии */
+.mobile-date-picker {
+    display: none;
+    gap: 0;
+    align-items: stretch;
+    flex: 1;
+    background-color: white;
+    border-radius: 0;
+    height: auto;
+    min-height: 100px;
+}
+
+.week-nav {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 16px 12px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+}
+
+.week-nav:active {
+    background-color: var(--bg-light);
+}
+
+.dates-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 1;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 8px;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-type: x mandatory;
+}
+
+.dates-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.date-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 80px;
+    border-radius: 12px;
+    background-color: var(--bg-light);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    font-size: 14px;
+    scroll-snap-align: center;
+}
+
+.date-item:active {
+    background-color: #efefef;
+    transform: scale(0.95);
+}
+
+.date-item.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(124, 92, 255, 0.3);
+    transform: scale(1.05);
+}
+
+.date-day {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.date-weekday {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.date-item.selected .date-weekday {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Основной контент */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px 40px;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(30px + var(--safe-area-bottom));
+}
+
+.date-header {
+    margin-bottom: 30px;
+}
+
+.date-header h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Секции */
+.section {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.add-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.add-btn:hover {
+    background-color: #6947cc;
+    transform: scale(1.05);
+}
+
+/* Списки элементов */
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--bg-light);
+    border-radius: 8px;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
+.item:hover {
+    background-color: #f0f0f2;
+}
+
+.item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--success-color);
+}
+
+.item.completed {
+    opacity: 0.6;
+}
+
+.item.completed .item-text {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+.item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.item-text {
+    font-size: 14px;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+.item-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.item-delete {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.item-delete:hover {
+    background-color: rgba(255, 59, 48, 0.1);
+}
+
+/* Заметки */
+.notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.note {
+    background-color: var(--bg-light);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.note:hover {
+    background-color: #f0f0f2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.note-text {
+    font-size: 14px;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Модальное окно */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+}
+
+.modal-content h3 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Форма */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 25px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #6947cc;
+}
+
+.btn-secondary {
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: #f0f0f2;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #ff2d20;
+}
+
+/* Адаптивный дизайн */
+@media (max-width: 768px) {
+    :root {
+        --safe-area-bottom: max(0px, env(safe-area-inset-bottom, 20px));
+    }
+
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: none;
+        padding: 0;
+        padding-top: var(--safe-area-top);
+        gap: 0;
+        max-height: auto;
+        flex-shrink: 0;
+        background-color: var(--secondary-color);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .desktop-calendar {
+        display: none;
+    }
+
+    .mobile-date-picker {
+        display: flex;
+    }
+
+    .time-display {
+        display: none;
+    }
+
+    .time {
+        display: none;
+    }
+
+    .main-content {
+        padding: 16px;
+        padding-top: 12px;
+        padding-bottom: calc(12px + var(--safe-area-bottom));
+        flex: 1;
+    }
+
+    .date-header h2 {
+        font-size: 22px;
+    }
+
+    .section {
+        padding: 15px;
+        margin-bottom: 16px;
+    }
+
+    .section-header {
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+
+    .section-header h3 {
+        font-size: 15px;
+    }
+
+    .add-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+    }
+
+    .item {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .item-text {
+        font-size: 14px;
+    }
+
+    .item-meta {
+        font-size: 12px;
+    }
+
+    .item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
+    .note {
+        min-height: 50px;
+        padding: 10px;
+    }
+
+    .note-text {
+        font-size: 14px;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: none;
+        padding: 20px;
+        margin-bottom: var(--safe-area-bottom);
+    }
+
+    .form-group input,
+    .form-group textarea {
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+/* Для iPhone 15 с Dynamic Island */
+@supports (padding: max(0px)) {
+    @media (max-width: 430px) and (max-height: 932px) {
+        .sidebar {
+            max-height: 30vh;
+        }
+
+        .time-display {
+            padding: 8px 0;
+        }
+
+        .time {
+            font-size: 24px;
+        }
+
+        .main-content {
+            padding: 12px;
+            padding-top: 8px;
+            padding-bottom: calc(8px + var(--safe-area-bottom));
+        }
+
+        .date-header {
+            margin-bottom: 16px;
+        }
+
+        .date-header h2 {
+            font-size: 20px;
+        }
+
+        .section {
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .section-header h3 {
+            font-size: 14px;
+        }
+
+        .item {
+            padding: 8px;
+        }
+
+        .item-text {
+            font-size: 13px;
+        }
+
+        .item-meta {
+            font-size: 11px;
+        }
+
+        .add-btn {
+            width: 28px;
+            height: 28px;
+            font-size: 18px;
+        }
+    }
+}
+
+/* Ландшафтная ориентация */
+@media (orientation: landscape) and (max-height: 500px) {
+    .sidebar {
+        max-height: 100%;
+        width: 200px;
+    }
+
+    .main-content {
+        padding: 12px 20px;
+    }
+
+    .section {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .date-header h2 {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+}
