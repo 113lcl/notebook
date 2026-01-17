@@ -6,6 +6,8 @@ const app = {
     editingNoteId: null,
     editingNoteType: null,
     currentAddType: null,
+    deleteConfirmType: null,
+    deleteConfirmIndex: null,
     data: {}
 };
 
@@ -95,8 +97,15 @@ function setupEventListeners() {
     // Модальное окно редактирования заметок
     document.getElementById('cancelNoteBtn').addEventListener('click', closeEditNoteModal);
     document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
-    document.getElementById('deleteNoteBtn').addEventListener('click', deleteNote);
+    document.getElementById('deleteNoteBtn').addEventListener('click', showDeleteConfirm);
     document.querySelector('#editNoteModal .modal-close').addEventListener('click', closeEditNoteModal);
+
+    // Модальное окно подтверждения удаления
+    document.getElementById('confirmDeleteCancel').addEventListener('click', closeDeleteConfirm);
+    document.getElementById('confirmDeleteConfirm').addEventListener('click', confirmDelete);
+    document.getElementById('confirmDeleteModal').addEventListener('click', (e) => {
+        if (e.target.id === 'confirmDeleteModal') closeDeleteConfirm();
+    });
 
     // Закрытие модальных окон при клике вне
     document.getElementById('addModal').addEventListener('click', (e) => {
@@ -276,6 +285,16 @@ function getItemsForDay(type) {
     return app.data[type][key];
 }
 
+// Получение цвета приоритета
+function getPriorityColor(priority) {
+    switch(priority) {
+        case 1: return '#FF3B30';  // Красный
+        case 2: return '#FFD60A';  // Жёлтый
+        case 3: return '#34c759';  // Зелёный
+        default: return '#7c5cff'; // Фиолетовый
+    }
+}
+
 // Рендеринг привычек
 function renderHabits() {
     const list = document.getElementById('habitsList');
@@ -292,7 +311,7 @@ function renderHabits() {
                    onchange="toggleHabit(${index})">
             <div class="item-content">
                 <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.goal ? `<div class="item-meta">Цель: ${item.goal}</div>` : ''}
+                ${item.priority ? `<div class="item-meta">Приоритет: ${item.priority}</div>` : ''}
                 ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
             </div>
             <button class="item-delete" onclick="deleteItem('habits', ${index})">×</button>
@@ -316,7 +335,7 @@ function renderTasks() {
                    onchange="toggleTask(${index})">
             <div class="item-content">
                 <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.goal ? `<div class="item-meta">Цель: ${item.goal}</div>` : ''}
+                ${item.priority ? `<div class="item-meta">Приоритет: ${item.priority}</div>` : ''}
                 ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
             </div>
             <button class="item-delete" onclick="deleteItem('tasks', ${index})">×</button>
@@ -340,7 +359,7 @@ function renderTomorrow() {
                    onchange="toggleTomorrow(${index})">
             <div class="item-content">
                 <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.goal ? `<div class="item-meta">Цель: ${item.goal}</div>` : ''}
+                ${item.priority ? `<div class="item-meta">Приоритет: ${item.priority}</div>` : ''}
                 ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
             </div>
             <button class="item-delete" onclick="deleteItem('tomorrow', ${index})">×</button>
@@ -398,7 +417,7 @@ function renderTriggers() {
                    onchange="toggleTrigger(${index})">
             <div class="item-content">
                 <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.goal ? `<div class="item-meta">Цель: ${item.goal}</div>` : ''}
+                ${item.priority ? `<div class="item-meta">Приоритет: ${item.priority}</div>` : ''}
                 ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
             </div>
             <button class="item-delete" onclick="deleteItem('triggers', ${index})">×</button>
@@ -422,16 +441,52 @@ function openAddModal() {
     document.getElementById('itemText').value = '';
     document.getElementById('itemNote').value = '';
     document.getElementById('itemColor').value = '#34c759';
-    document.getElementById('colorValue').textContent = 'Зелёный';
-    document.getElementById('itemGoal').value = '1';
-    document.getElementById('goalValue').textContent = '1';
+    document.getElementById('itemPriority').value = '1';
     document.getElementById('itemRepeat').value = 'daily';
     document.getElementById('repeatValue').textContent = 'Ежедневно';
     document.getElementById('itemReminder').value = 'none';
     document.getElementById('reminderValue').textContent = 'Нет';
     
+    // Установить первый цвет как выбранный
+    document.querySelectorAll('.color-btn').forEach((btn, index) => {
+        btn.classList.remove('selected');
+        if (index === 0) btn.classList.add('selected');
+    });
+    
+    // Установить первый приоритет как выбранный
+    document.querySelectorAll('.priority-btn').forEach((btn, index) => {
+        btn.classList.remove('selected');
+        if (index === 0) btn.classList.add('selected');
+    });
+    
     modal.classList.remove('hidden');
     document.getElementById('itemText').focus();
+}
+
+// Выбор цвета
+function selectColor(color, name) {
+    document.getElementById('itemColor').value = color;
+    
+    // Обновить активный цвет
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.dataset.color === color) {
+            btn.classList.add('selected');
+        }
+    });
+}
+
+// Выбор приоритета
+function selectPriority(priority) {
+    document.getElementById('itemPriority').value = priority;
+    
+    // Обновить активный приоритет
+    document.querySelectorAll('.priority-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        if (parseInt(btn.dataset.priority) === priority) {
+            btn.classList.add('selected');
+        }
+    });
 }
 
 // Закрытие модального окна добавления
@@ -444,7 +499,7 @@ function saveItem() {
     const text = document.getElementById('itemText').value.trim();
     const note = document.getElementById('itemNote').value.trim();
     const color = document.getElementById('itemColor').value;
-    const goal = document.getElementById('itemGoal').value;
+    const priority = parseInt(document.getElementById('itemPriority').value);
     const repeat = document.getElementById('itemRepeat').value;
     const reminder = document.getElementById('itemReminder').value;
 
@@ -463,7 +518,7 @@ function saveItem() {
         text: text,
         note: note || null,
         color: color,
-        goal: parseInt(goal),
+        priority: priority,
         repeat: repeat,
         reminder: reminder,
         completed: false,
@@ -509,12 +564,10 @@ function toggleTrigger(index) {
 
 // Удаление элемента
 function deleteItem(type, index) {
-    if (confirm('Вы уверены?')) {
-        const items = getItemsForDay(type);
-        items.splice(index, 1);
-        saveData();
-        renderContent();
-    }
+    app.deleteConfirmType = type;
+    app.deleteConfirmIndex = index;
+    document.getElementById('confirmDeleteText').textContent = 'Вы уверены, что хотите удалить этот элемент?';
+    document.getElementById('confirmDeleteModal').classList.remove('hidden');
 }
 
 // Редактирование заметки
@@ -554,16 +607,37 @@ function saveNote() {
     renderContent();
 }
 
-// Удаление заметки
-function deleteNote() {
-    if (confirm('Удалить заметку?')) {
-        const items = getItemsForDay(app.editingNoteType);
-        items.splice(app.editingNoteId, 1);
+// Показать окно подтверждения удаления
+function showDeleteConfirm() {
+    app.deleteConfirmType = app.editingNoteType;
+    app.deleteConfirmIndex = app.editingNoteId;
+    document.getElementById('confirmDeleteText').textContent = 'Вы уверены, что хотите удалить эту заметку?';
+    document.getElementById('confirmDeleteModal').classList.remove('hidden');
+}
+
+// Закрытие окна подтверждения удаления
+function closeDeleteConfirm() {
+    document.getElementById('confirmDeleteModal').classList.add('hidden');
+    app.deleteConfirmType = null;
+    app.deleteConfirmIndex = null;
+}
+
+// Подтверждение удаления
+function confirmDelete() {
+    if (app.deleteConfirmType && app.deleteConfirmIndex !== null) {
+        const items = getItemsForDay(app.deleteConfirmType);
+        items.splice(app.deleteConfirmIndex, 1);
         
         saveData();
+        closeDeleteConfirm();
         closeEditNoteModal();
         renderContent();
     }
+}
+
+// Удаление заметки (оставляю старую функцию на случай других вызовов)
+function deleteNote() {
+    showDeleteConfirm();
 }
 
 // Сохранение данных в localStorage

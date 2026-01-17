@@ -154,24 +154,24 @@
                     <div class="option-item">
                         <div class="option-icon">🎨</div>
                         <div class="option-label">Цвет</div>
-                        <div class="option-value" id="colorValue">Зелёный</div>
-                        <input type="color" id="itemColor" value="#34c759" style="display: none;">
-                        <button class="option-button" onclick="document.getElementById('itemColor').click()">Выбрать</button>
+                        <div class="color-picker">
+                            <button class="color-btn" data-color="#34c759" data-name="Зелёный" style="background-color: #34c759;" onclick="selectColor('#34c759', 'Зелёный')"></button>
+                            <button class="color-btn" data-color="#007AFF" data-name="Синий" style="background-color: #007AFF;" onclick="selectColor('#007AFF', 'Синий')"></button>
+                            <button class="color-btn" data-color="#FFD60A" data-name="Жёлтый" style="background-color: #FFD60A;" onclick="selectColor('#FFD60A', 'Жёлтый')"></button>
+                            <button class="color-btn" data-color="#FF3B30" data-name="Красный" style="background-color: #FF3B30;" onclick="selectColor('#FF3B30', 'Красный')"></button>
+                        </div>
+                        <input type="hidden" id="itemColor" value="#34c759">
                     </div>
 
                     <div class="option-item">
                         <div class="option-icon">🚩</div>
-                        <div class="option-label">Цель</div>
-                        <div class="option-value" id="goalValue">1</div>
-                        <select id="itemGoal" class="option-select">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="30">30</option>
-                        </select>
+                        <div class="option-label">Приоритет</div>
+                        <div class="priority-picker">
+                            <button class="priority-btn priority-1" data-priority="1" onclick="selectPriority(1)" title="Высокий приоритет">🔴</button>
+                            <button class="priority-btn priority-2" data-priority="2" onclick="selectPriority(2)" title="Средний приоритет">🟡</button>
+                            <button class="priority-btn priority-3" data-priority="3" onclick="selectPriority(3)" title="Низкий приоритет">🟢</button>
+                        </div>
+                        <input type="hidden" id="itemPriority" value="1">
                     </div>
 
                     <div class="option-item">
@@ -223,6 +223,19 @@
                 <button id="deleteNoteBtn" class="btn-danger">Удалить</button>
                 <button id="cancelNoteBtn" class="btn-secondary">Отмена</button>
                 <button id="saveNoteBtn" class="btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="confirmDeleteModal" class="modal hidden">
+        <div class="modal-content confirm-modal">
+            <h3>Удалить?</h3>
+            <p id="confirmDeleteText">Вы уверены, что хотите удалить эту заметку?</p>
+            
+            <div class="form-actions">
+                <button id="confirmDeleteCancel" class="btn-secondary">Отмена</button>
+                <button id="confirmDeleteConfirm" class="btn-danger">Удалить</button>
             </div>
         </div>
     </div>
