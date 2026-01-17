@@ -128,6 +128,28 @@
                     <div id="triggersList" class="items-list"></div>
                 </div>
             </section>
+
+            <!-- Список покупок -->
+            <section class="section">
+                <div class="section-header">
+                    <h3>🛒 Список покупок</h3>
+                    <button class="add-btn" data-type="shopping">+</button>
+                </div>
+                <div class="section-content">
+                    <div id="shoppingList" class="items-list"></div>
+                </div>
+            </section>
+
+            <!-- Список уборки -->
+            <section class="section">
+                <div class="section-header">
+                    <h3>🧹 Список уборки</h3>
+                    <button class="add-btn" data-type="cleaning">+</button>
+                </div>
+                <div class="section-content">
+                    <div id="cleaningList" class="items-list"></div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -137,72 +159,78 @@
             <button class="modal-close">&times;</button>
             <h3 id="modalTitle">Добавить</h3>
             
-            <div class="form-group">
-                <label for="itemText">Название:</label>
-                <input type="text" id="itemText" placeholder="Введите название..." maxlength="60">
-                <div class="char-count"><span id="charCount">0</span>/60</div>
+            <!-- ФОРМАТ 1: С приоритетом и цветом (Задачи, Привычки) -->
+            <div id="format-priority" class="format-section">
+                <div class="form-group">
+                    <label for="itemText">Название:</label>
+                    <input type="text" id="itemText" placeholder="Введите название..." maxlength="60">
+                    <div class="char-count"><span id="charCount">0</span>/60</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Заметка:</label>
+                    <textarea id="itemNote" placeholder="Заметка к задаче..." maxlength="300"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Параметры:</label>
+                    <div class="options-grid">
+                        <div class="option-item">
+                            <div class="option-icon">🎨</div>
+                            <div class="option-label">Цвет</div>
+                            <div class="color-picker">
+                                <button class="color-btn" data-color="#34c759" data-name="Зелёный" style="background-color: #34c759;" onclick="selectColor('#34c759', 'Зелёный')"></button>
+                                <button class="color-btn" data-color="#007AFF" data-name="Синий" style="background-color: #007AFF;" onclick="selectColor('#007AFF', 'Синий')"></button>
+                                <button class="color-btn" data-color="#FFD60A" data-name="Жёлтый" style="background-color: #FFD60A;" onclick="selectColor('#FFD60A', 'Жёлтый')"></button>
+                                <button class="color-btn" data-color="#FF3B30" data-name="Красный" style="background-color: #FF3B30;" onclick="selectColor('#FF3B30', 'Красный')"></button>
+                            </div>
+                            <input type="hidden" id="itemColor" value="#34c759">
+                        </div>
+
+                        <div class="option-item">
+                            <div class="option-icon">🚩</div>
+                            <div class="option-label">Приоритет</div>
+                            <div class="priority-picker">
+                                <button class="priority-btn priority-1" data-priority="1" onclick="selectPriority(1)" title="Высокий приоритет">🔴</button>
+                                <button class="priority-btn priority-2" data-priority="2" onclick="selectPriority(2)" title="Средний приоритет">🟡</button>
+                                <button class="priority-btn priority-3" data-priority="3" onclick="selectPriority(3)" title="Низкий приоритет">🟢</button>
+                            </div>
+                            <input type="hidden" id="itemPriority" value="1">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Заметка:</label>
-                <textarea id="itemNote" placeholder="Заметка к задаче..." maxlength="300"></textarea>
+            <!-- ФОРМАТ 2: Просто текст (Заметки, Дневник благодарности) -->
+            <div id="format-text" class="format-section" style="display: none;">
+                <div class="form-group">
+                    <label for="itemText2">Текст:</label>
+                    <textarea id="itemText2" placeholder="Введите текст..." maxlength="500"></textarea>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Параметры:</label>
-                <div class="options-grid">
-                    <div class="option-item">
-                        <div class="option-icon">🎨</div>
-                        <div class="option-label">Цвет</div>
-                        <div class="color-picker">
-                            <button class="color-btn" data-color="#34c759" data-name="Зелёный" style="background-color: #34c759;" onclick="selectColor('#34c759', 'Зелёный')"></button>
-                            <button class="color-btn" data-color="#007AFF" data-name="Синий" style="background-color: #007AFF;" onclick="selectColor('#007AFF', 'Синий')"></button>
-                            <button class="color-btn" data-color="#FFD60A" data-name="Жёлтый" style="background-color: #FFD60A;" onclick="selectColor('#FFD60A', 'Жёлтый')"></button>
-                            <button class="color-btn" data-color="#FF3B30" data-name="Красный" style="background-color: #FF3B30;" onclick="selectColor('#FF3B30', 'Красный')"></button>
+            <!-- ФОРМАТ 3: Список с чекбоксами (Списки покупок, уборки) -->
+            <div id="format-list" class="format-section" style="display: none;">
+                <div class="form-group">
+                    <label>Элементы списка:</label>
+                    <div id="listItems" class="list-items"></div>
+                    
+                    <div class="ios-list-input-section">
+                        <input 
+                            type="text" 
+                            id="listInputText" 
+                            class="ios-list-input" 
+                            placeholder="Введите элемент..."
+                            maxlength="60"
+                        >
+                        <div class="ios-list-counter">
+                            <span id="listCharCount">0</span>/<span>60</span>
                         </div>
-                        <input type="hidden" id="itemColor" value="#34c759">
-                    </div>
-
-                    <div class="option-item">
-                        <div class="option-icon">🚩</div>
-                        <div class="option-label">Приоритет</div>
-                        <div class="priority-picker">
-                            <button class="priority-btn priority-1" data-priority="1" onclick="selectPriority(1)" title="Высокий приоритет">🔴</button>
-                            <button class="priority-btn priority-2" data-priority="2" onclick="selectPriority(2)" title="Средний приоритет">🟡</button>
-                            <button class="priority-btn priority-3" data-priority="3" onclick="selectPriority(3)" title="Низкий приоритет">🟢</button>
-                        </div>
-                        <input type="hidden" id="itemPriority" value="1">
-                    </div>
-
-                    <div class="option-item">
-                        <div class="option-icon">🔄</div>
-                        <div class="option-label">Повтор</div>
-                        <div class="option-value" id="repeatValue">Ежедневно</div>
-                        <select id="itemRepeat" class="option-select">
-                            <option value="none">Нет</option>
-                            <option value="daily" selected>Ежедневно</option>
-                            <option value="weekly">Еженедельно</option>
-                            <option value="monthly">Ежемесячно</option>
-                        </select>
-                    </div>
-
-                    <div class="option-item">
-                        <div class="option-icon">⏰</div>
-                        <div class="option-label">Напоминание</div>
-                        <div class="option-value" id="reminderValue">Нет</div>
-                        <select id="itemReminder" class="option-select">
-                            <option value="none" selected>Нет</option>
-                            <option value="morning">Утро (08:00)</option>
-                            <option value="afternoon">День (12:00)</option>
-                            <option value="evening">Вечер (18:00)</option>
-                            <option value="night">Ночь (21:00)</option>
-                        </select>
                     </div>
                 </div>
             </div>
 
             <div class="form-actions">
-                <button id="cancelBtn" class="btn-secondary">Отмена</button>
                 <button id="saveBtn" class="btn-primary">Создать</button>
             </div>
         </div>

@@ -1,3 +1,15 @@
+// Конфигурация категорий
+const CATEGORIES_CONFIG = {
+    habits: { name: 'Привычки', emoji: '⭐', format: 'priority', tags: [] },
+    tasks: { name: 'Задачи', emoji: '✅', format: 'priority', tags: [] },
+    tomorrow: { name: 'Задачи на завтра', emoji: '🚀', format: 'priority', tags: [] },
+    notes: { name: 'Заметки', emoji: '📝', format: 'text', tags: [] },
+    gratitude: { name: 'Дневник благодарности', emoji: '💝', format: 'text', tags: [] },
+    triggers: { name: 'Триггеры неудач', emoji: '❌', format: 'list', tags: [] },
+    shopping: { name: 'Список покупок', emoji: '🛒', format: 'list', tags: [] },
+    cleaning: { name: 'Список уборки', emoji: '🧹', format: 'list', tags: [] }
+};
+
 // Состояние приложения
 const app = {
     selectedDate: new Date(),
@@ -8,7 +20,10 @@ const app = {
     currentAddType: null,
     deleteConfirmType: null,
     deleteConfirmIndex: null,
-    data: {}
+    itemColor: '#34c759',
+    itemPriority: 3,
+    data: {},
+    customCategories: {} // Пользовательские категории
 };
 
 // Инициализация
@@ -90,22 +105,54 @@ function setupEventListeners() {
     });
 
     // Модальное окно добавления
-    document.getElementById('cancelBtn').addEventListener('click', closeAddModal);
     document.getElementById('saveBtn').addEventListener('click', saveItem);
     document.querySelector('#addModal .modal-close').addEventListener('click', closeAddModal);
+    
+    // Кнопка для добавления элемента в список
+    const addListBtn = document.getElementById('addListItemBtn');
+    if (addListBtn) {
+        addListBtn.addEventListener('click', addListItem);
+    }
+    
+    // Обработчик Enter для добавления элемента в список
+    const listInput = document.getElementById('listInputText');
+    if (listInput) {
+        listInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addListItem();
+            }
+        });
+        
+        // Обработчик ввода для счётчика символов
+        listInput.addEventListener('input', () => {
+            updateListCharCount();
+        });
+    }
 
     // Модальное окно редактирования заметок
-    document.getElementById('cancelNoteBtn').addEventListener('click', closeEditNoteModal);
-    document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
-    document.getElementById('deleteNoteBtn').addEventListener('click', showDeleteConfirm);
-    document.querySelector('#editNoteModal .modal-close').addEventListener('click', closeEditNoteModal);
+    const cancelNoteBtn = document.getElementById('cancelNoteBtn');
+    const saveNoteBtn = document.getElementById('saveNoteBtn');
+    const deleteNoteBtn = document.getElementById('deleteNoteBtn');
+    const editModalClose = document.querySelector('#editNoteModal .modal-close');
+    
+    if (cancelNoteBtn) cancelNoteBtn.addEventListener('click', closeEditNoteModal);
+    if (saveNoteBtn) saveNoteBtn.addEventListener('click', saveNote);
+    if (deleteNoteBtn) deleteNoteBtn.addEventListener('click', showDeleteConfirm);
+    if (editModalClose) editModalClose.addEventListener('click', closeEditNoteModal);
 
     // Модальное окно подтверждения удаления
-    document.getElementById('confirmDeleteCancel').addEventListener('click', closeDeleteConfirm);
-    document.getElementById('confirmDeleteConfirm').addEventListener('click', confirmDelete);
-    document.getElementById('confirmDeleteModal').addEventListener('click', (e) => {
-        if (e.target.id === 'confirmDeleteModal') closeDeleteConfirm();
-    });
+    const confirmDeleteCancel = document.getElementById('confirmDeleteCancel');
+    const confirmDeleteConfirm = document.getElementById('confirmDeleteConfirm');
+    const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+    
+    if (confirmDeleteCancel) confirmDeleteCancel.addEventListener('click', closeDeleteConfirm);
+    if (confirmDeleteConfirm) confirmDeleteConfirm.addEventListener('click', confirmDelete);
+    if (confirmDeleteModal) {
+        confirmDeleteModal.addEventListener('click', (e) => {
+            if (e.target.id === 'confirmDeleteModal') closeDeleteConfirm();
+        });
+    }
 
     // Закрытие модальных окон при клике вне
     document.getElementById('addModal').addEventListener('click', (e) => {
@@ -247,6 +294,8 @@ function renderContent() {
     renderNotes();
     renderGratitude();
     renderTriggers();
+    renderShoppingList();
+    renderCleaningList();
 }
 
 // Обновление заголовка даты
@@ -411,56 +460,195 @@ function renderTriggers() {
         return;
     }
 
-    list.innerHTML = items.map((item, index) => `
-        <div class="item ${item.completed ? 'completed' : ''}" style="border-left: 4px solid ${item.color || '#7c5cff'};">
-            <input type="checkbox" ${item.completed ? 'checked' : ''} 
-                   onchange="toggleTrigger(${index})">
-            <div class="item-content">
-                <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.priority ? `<div class="item-meta">Приоритет: ${item.priority}</div>` : ''}
-                ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
-            </div>
-            <button class="item-delete" onclick="deleteItem('triggers', ${index})">×</button>
-        </div>
-    `).join('');
+    list.innerHTML = items.map((item, index) => {
+        // Если это список (новый формат)
+        if (item.items) {
+            const itemsHtml = item.items.map((subitem, subindex) => `
+                <div class="list-item">
+                    <input type="checkbox" ${subitem.completed ? 'checked' : ''} 
+                           onchange="toggleListItem('triggers', ${index}, ${subindex})">
+                    <span>${escapeHtml(subitem.text)}</span>
+                </div>
+            `).join('');
+            return `<div class="list-container">${itemsHtml}<button class="item-delete" onclick="deleteItem('triggers', ${index})">×</button></div>`;
+        }
+        // Если это обычный элемент (старый формат)
+        else {
+            return `
+                <div class="item ${item.completed ? 'completed' : ''}" style="border-left: 4px solid ${item.color || '#7c5cff'};">
+                    <input type="checkbox" ${item.completed ? 'checked' : ''} 
+                           onchange="toggleTrigger(${index})">
+                    <div class="item-content">
+                        <div class="item-text">${escapeHtml(item.text)}</div>
+                        ${item.priority ? `<div class="item-meta">Приоритет: ${item.priority}</div>` : ''}
+                        ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
+                    </div>
+                    <button class="item-delete" onclick="deleteItem('triggers', ${index})">×</button>
+                </div>
+            `;
+        }
+    }).join('');
+}
+
+// Рендеринг списка покупок
+function renderShoppingList() {
+    const list = document.getElementById('shoppingList');
+    const items = getItemsForDay('shopping');
+    
+    if (items.length === 0) {
+        list.innerHTML = '<div class="empty-message">Нет позиций в списке</div>';
+        return;
+    }
+
+    list.innerHTML = items.map((item, index) => {
+        if (item.items) {
+            const itemsHtml = item.items.map((subitem, subindex) => `
+                <div class="list-item">
+                    <input type="checkbox" ${subitem.completed ? 'checked' : ''} 
+                           onchange="toggleListItem('shopping', ${index}, ${subindex})">
+                    <span>${escapeHtml(subitem.text)}</span>
+                </div>
+            `).join('');
+            return `<div class="list-container">${itemsHtml}<button class="item-delete" onclick="deleteItem('shopping', ${index})">×</button></div>`;
+        }
+        return '';
+    }).join('');
+}
+
+// Рендеринг списка уборки
+function renderCleaningList() {
+    const list = document.getElementById('cleaningList');
+    const items = getItemsForDay('cleaning');
+    
+    if (items.length === 0) {
+        list.innerHTML = '<div class="empty-message">Нет задач уборки</div>';
+        return;
+    }
+
+    list.innerHTML = items.map((item, index) => {
+        if (item.items) {
+            const itemsHtml = item.items.map((subitem, subindex) => `
+                <div class="list-item">
+                    <input type="checkbox" ${subitem.completed ? 'checked' : ''} 
+                           onchange="toggleListItem('cleaning', ${index}, ${subindex})">
+                    <span>${escapeHtml(subitem.text)}</span>
+                </div>
+            `).join('');
+            return `<div class="list-container">${itemsHtml}<button class="item-delete" onclick="deleteItem('cleaning', ${index})">×</button></div>`;
+        }
+        return '';
+    }).join('');
 }
 
 // Открытие модального окна добавления
 function openAddModal() {
     const modal = document.getElementById('addModal');
-    const titleMap = {
-        'habits': 'Добавить привычку',
-        'tasks': 'Добавить задачу',
-        'tomorrow': 'Добавить задачу на завтра',
-        'notes': 'Добавить заметку',
-        'gratitude': 'Добавить запись благодарности',
-        'triggers': 'Добавить триггер'
-    };
+    const config = CATEGORIES_CONFIG[app.currentAddType];
     
-    document.getElementById('modalTitle').textContent = titleMap[app.currentAddType];
+    if (!config) return;
+    
+    document.getElementById('modalTitle').textContent = `Добавить ${config.name.toLowerCase()}`;
+    
+    // Скрыть все форматы
+    document.getElementById('format-priority').style.display = 'none';
+    document.getElementById('format-text').style.display = 'none';
+    document.getElementById('format-list').style.display = 'none';
+    
+    // Очистить поля
     document.getElementById('itemText').value = '';
     document.getElementById('itemNote').value = '';
-    document.getElementById('itemColor').value = '#34c759';
-    document.getElementById('itemPriority').value = '1';
-    document.getElementById('itemRepeat').value = 'daily';
-    document.getElementById('repeatValue').textContent = 'Ежедневно';
-    document.getElementById('itemReminder').value = 'none';
-    document.getElementById('reminderValue').textContent = 'Нет';
+    document.getElementById('itemText2').value = '';
+    document.getElementById('listItems').innerHTML = '';
     
-    // Установить первый цвет как выбранный
-    document.querySelectorAll('.color-btn').forEach((btn, index) => {
-        btn.classList.remove('selected');
-        if (index === 0) btn.classList.add('selected');
-    });
+    const listInput = document.getElementById('listInputText');
+    if (listInput) {
+        listInput.value = '';
+        updateListCharCount();
+    }
     
-    // Установить первый приоритет как выбранный
-    document.querySelectorAll('.priority-btn').forEach((btn, index) => {
-        btn.classList.remove('selected');
-        if (index === 0) btn.classList.add('selected');
-    });
+    // Показать нужный формат
+    if (config.format === 'priority') {
+        document.getElementById('format-priority').style.display = 'block';
+        
+        document.getElementById('itemColor').value = '#34c759';
+        document.getElementById('itemPriority').value = '1';
+        
+        document.querySelectorAll('.color-btn').forEach((btn, index) => {
+            btn.classList.remove('selected');
+            if (index === 0) btn.classList.add('selected');
+        });
+        
+        document.querySelectorAll('.priority-btn').forEach((btn, index) => {
+            btn.classList.remove('selected');
+            if (index === 0) btn.classList.add('selected');
+        });
+    } else if (config.format === 'text') {
+        document.getElementById('format-text').style.display = 'block';
+    } else if (config.format === 'list') {
+        document.getElementById('format-list').style.display = 'block';
+        // Инициализировать кастомное поле ввода
+        setTimeout(() => {
+            const input = document.getElementById('listInputText');
+            if (input) input.focus();
+        }, 100);
+    }
     
     modal.classList.remove('hidden');
-    document.getElementById('itemText').focus();
+    
+    // Фокус на первое поле
+    setTimeout(() => {
+        const activeFormat = document.getElementById('format-priority').style.display !== 'none' 
+            ? document.getElementById('itemText')
+            : document.getElementById('itemText2');
+        if (activeFormat) activeFormat.focus();
+    }, 100);
+}
+
+// Добавить элемент в список
+function addListItem() {
+    const input = document.getElementById('listInputText');
+    const listItems = document.getElementById('listItems');
+    
+    if (!input || !listItems) {
+        return;
+    }
+    
+    const text = input.value.trim();
+    
+    if (text === '') {
+        input.focus();
+        return;
+    }
+    
+    // Создаем элемент списка
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.innerHTML = `
+        <input type="checkbox">
+        <span>${escapeHtml(text)}</span>
+        <button type="button" onclick="this.parentElement.remove();">×</button>
+    `;
+    
+    listItems.appendChild(item);
+    
+    // Очищаем поле ввода для следующего элемента
+    input.value = '';
+    updateListCharCount();
+    
+    // Возвращаем фокус на поле ввода для следующего элемента
+    input.focus();
+    
+    // Прокручиваем список вниз
+    listItems.scrollTop = listItems.scrollHeight;
+}
+
+// Обновить счётчик символов для списков
+function updateListCharCount() {
+    const input = document.getElementById('listInputText');
+    const counter = document.getElementById('listCharCount');
+    if (input && counter) {
+        counter.textContent = input.value.length;
+    }
 }
 
 // Выбор цвета
@@ -496,38 +684,86 @@ function closeAddModal() {
 
 // Сохранение элемента
 function saveItem() {
-    const text = document.getElementById('itemText').value.trim();
-    const note = document.getElementById('itemNote').value.trim();
-    const color = document.getElementById('itemColor').value;
-    const priority = parseInt(document.getElementById('itemPriority').value);
-    const repeat = document.getElementById('itemRepeat').value;
-    const reminder = document.getElementById('itemReminder').value;
-
-    if (!text) {
-        alert('Пожалуйста, введите название');
-        return;
-    }
-
     const type = app.currentAddType;
-    const key = getDayKey(app.selectedDate);
+    const config = CATEGORIES_CONFIG[type];
+    
+    if (!config) return;
 
+    const key = getDayKey(app.selectedDate);
     if (!app.data[type]) app.data[type] = {};
     if (!app.data[type][key]) app.data[type][key] = [];
 
-    app.data[type][key].push({
-        text: text,
-        note: note || null,
-        color: color,
-        priority: priority,
-        repeat: repeat,
-        reminder: reminder,
-        completed: false,
-        created: new Date().toISOString()
-    });
+    let itemData = null;
 
-    saveData();
-    closeAddModal();
-    renderContent();
+    // ФОРМАТ 1: С приоритетом и цветом
+    if (config.format === 'priority') {
+        const text = document.getElementById('itemText').value.trim();
+        const note = document.getElementById('itemNote').value.trim();
+        const color = document.getElementById('itemColor').value;
+        const priority = parseInt(document.getElementById('itemPriority').value);
+
+        if (!text) {
+            alert('Пожалуйста, введите название');
+            return;
+        }
+
+        itemData = {
+            text: text,
+            note: note || null,
+            color: color,
+            priority: priority,
+            completed: false,
+            created: new Date().toISOString()
+        };
+    }
+    // ФОРМАТ 2: Просто текст
+    else if (config.format === 'text') {
+        const text = document.getElementById('itemText2').value.trim();
+
+        if (!text) {
+            alert('Пожалуйста, введите текст');
+            return;
+        }
+
+        itemData = {
+            text: text,
+            created: new Date().toISOString()
+        };
+    }
+    // ФОРМАТ 3: Список с чекбоксами
+    else if (config.format === 'list') {
+        // Если в поле ввода ещё есть текст, добавляем его
+        const listInput = document.getElementById('listInputText');
+        if (listInput && listInput.value.trim() !== '') {
+            addListItem();
+        }
+        
+        const listItems = Array.from(document.querySelectorAll('#listItems .list-item')).map(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            const span = item.querySelector('span');
+            return {
+                text: span.textContent.trim(),
+                completed: checkbox.checked
+            };
+        }).filter(item => item.text);
+
+        if (listItems.length === 0) {
+            alert('Пожалуйста, добавьте хотя бы один элемент в список');
+            return;
+        }
+
+        itemData = {
+            items: listItems,
+            created: new Date().toISOString()
+        };
+    }
+
+    if (itemData) {
+        app.data[type][key].push(itemData);
+        saveData();
+        closeAddModal();
+        renderContent();
+    }
 }
 
 // Переключение привычки
@@ -560,6 +796,17 @@ function toggleTrigger(index) {
     items[index].completed = !items[index].completed;
     saveData();
     renderTriggers();
+}
+
+// Переключение элемента в списке
+function toggleListItem(type, index, subindex) {
+    const items = getItemsForDay(type);
+    if (items[index].items && items[index].items[subindex]) {
+        items[index].items[subindex].completed = !items[index].items[subindex].completed;
+        saveData();
+        const renderFunc = type === 'triggers' ? renderTriggers : (type === 'shopping' ? renderShoppingList : renderCleaningList);
+        renderFunc();
+    }
 }
 
 // Удаление элемента
@@ -643,12 +890,15 @@ function deleteNote() {
 // Сохранение данных в localStorage
 function saveData() {
     localStorage.setItem('diaryData', JSON.stringify(app.data));
+    localStorage.setItem('customCategories', JSON.stringify(app.customCategories));
 }
 
 // Загрузка данных из localStorage
 function loadData() {
     const saved = localStorage.getItem('diaryData');
     app.data = saved ? JSON.parse(saved) : {};
+    const savedCategories = localStorage.getItem('customCategories');
+    app.customCategories = savedCategories ? JSON.parse(savedCategories) : {};
 }
 
 // Экранирование HTML
