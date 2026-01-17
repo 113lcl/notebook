@@ -330,12 +330,13 @@ html, body {
 
 .item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     padding: 12px;
     background-color: var(--bg-light);
     border-radius: 8px;
     gap: 12px;
     transition: all 0.2s;
+    border-left: 4px solid transparent;
 }
 
 .item:hover {
@@ -369,6 +370,13 @@ html, body {
     font-size: 14px;
     color: var(--text-primary);
     word-break: break-word;
+}
+
+.item-note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-style: italic;
 }
 
 .item-meta {
@@ -504,7 +512,7 @@ html, body {
     color: var(--text-primary);
 }
 
-.form-group input,
+.form-group input[type="text"],
 .form-group textarea {
     width: 100%;
     padding: 10px 12px;
@@ -516,11 +524,78 @@ html, body {
     transition: all 0.2s;
 }
 
-.form-group input:focus,
+.form-group input[type="text"]:focus,
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.1);
+}
+
+.char-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* Сетка параметров */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.option-item {
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.option-icon {
+    font-size: 20px;
+}
+
+.option-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.option-value {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-height: 18px;
+}
+
+.option-select {
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 12px;
+    background-color: white;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.option-button {
+    padding: 6px 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option-button:active {
+    background-color: #6947cc;
 }
 
 .form-actions {

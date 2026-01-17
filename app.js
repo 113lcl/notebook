@@ -287,12 +287,13 @@ function renderHabits() {
     }
 
     list.innerHTML = items.map((item, index) => `
-        <div class="item ${item.completed ? 'completed' : ''}">
+        <div class="item ${item.completed ? 'completed' : ''}" style="border-left: 4px solid ${item.color || '#7c5cff'};">
             <input type="checkbox" ${item.completed ? 'checked' : ''} 
                    onchange="toggleHabit(${index})">
             <div class="item-content">
                 <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.time ? `<div class="item-meta">${item.time}</div>` : ''}
+                ${item.goal ? `<div class="item-meta">Цель: ${item.goal}</div>` : ''}
+                ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
             </div>
             <button class="item-delete" onclick="deleteItem('habits', ${index})">×</button>
         </div>
@@ -310,12 +311,13 @@ function renderTasks() {
     }
 
     list.innerHTML = items.map((item, index) => `
-        <div class="item ${item.completed ? 'completed' : ''}">
+        <div class="item ${item.completed ? 'completed' : ''}" style="border-left: 4px solid ${item.color || '#7c5cff'};">
             <input type="checkbox" ${item.completed ? 'checked' : ''} 
                    onchange="toggleTask(${index})">
             <div class="item-content">
                 <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.time ? `<div class="item-meta">${item.time}</div>` : ''}
+                ${item.goal ? `<div class="item-meta">Цель: ${item.goal}</div>` : ''}
+                ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
             </div>
             <button class="item-delete" onclick="deleteItem('tasks', ${index})">×</button>
         </div>
@@ -333,12 +335,13 @@ function renderTomorrow() {
     }
 
     list.innerHTML = items.map((item, index) => `
-        <div class="item ${item.completed ? 'completed' : ''}">
+        <div class="item ${item.completed ? 'completed' : ''}" style="border-left: 4px solid ${item.color || '#7c5cff'};">
             <input type="checkbox" ${item.completed ? 'checked' : ''} 
                    onchange="toggleTomorrow(${index})">
             <div class="item-content">
                 <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.time ? `<div class="item-meta">${item.time}</div>` : ''}
+                ${item.goal ? `<div class="item-meta">Цель: ${item.goal}</div>` : ''}
+                ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
             </div>
             <button class="item-delete" onclick="deleteItem('tomorrow', ${index})">×</button>
         </div>
@@ -390,12 +393,13 @@ function renderTriggers() {
     }
 
     list.innerHTML = items.map((item, index) => `
-        <div class="item ${item.completed ? 'completed' : ''}">
+        <div class="item ${item.completed ? 'completed' : ''}" style="border-left: 4px solid ${item.color || '#7c5cff'};">
             <input type="checkbox" ${item.completed ? 'checked' : ''} 
                    onchange="toggleTrigger(${index})">
             <div class="item-content">
                 <div class="item-text">${escapeHtml(item.text)}</div>
-                ${item.time ? `<div class="item-meta">${item.time}</div>` : ''}
+                ${item.goal ? `<div class="item-meta">Цель: ${item.goal}</div>` : ''}
+                ${item.note ? `<div class="item-note">${escapeHtml(item.note)}</div>` : ''}
             </div>
             <button class="item-delete" onclick="deleteItem('triggers', ${index})">×</button>
         </div>
@@ -416,10 +420,15 @@ function openAddModal() {
     
     document.getElementById('modalTitle').textContent = titleMap[app.currentAddType];
     document.getElementById('itemText').value = '';
-    
-    const today = getDayKey(new Date());
-    document.getElementById('itemDate').value = getDayKey(app.selectedDate);
-    document.getElementById('itemTime').value = '';
+    document.getElementById('itemNote').value = '';
+    document.getElementById('itemColor').value = '#34c759';
+    document.getElementById('colorValue').textContent = 'Зелёный';
+    document.getElementById('itemGoal').value = '1';
+    document.getElementById('goalValue').textContent = '1';
+    document.getElementById('itemRepeat').value = 'daily';
+    document.getElementById('repeatValue').textContent = 'Ежедневно';
+    document.getElementById('itemReminder').value = 'none';
+    document.getElementById('reminderValue').textContent = 'Нет';
     
     modal.classList.remove('hidden');
     document.getElementById('itemText').focus();
@@ -433,40 +442,36 @@ function closeAddModal() {
 // Сохранение элемента
 function saveItem() {
     const text = document.getElementById('itemText').value.trim();
-    const date = document.getElementById('itemDate').value;
-    const time = document.getElementById('itemTime').value;
+    const note = document.getElementById('itemNote').value.trim();
+    const color = document.getElementById('itemColor').value;
+    const goal = document.getElementById('itemGoal').value;
+    const repeat = document.getElementById('itemRepeat').value;
+    const reminder = document.getElementById('itemReminder').value;
 
     if (!text) {
-        alert('Пожалуйста, введите текст');
+        alert('Пожалуйста, введите название');
         return;
     }
 
     const type = app.currentAddType;
-    
-    // Парсим дату правильно в локальном времени
-    const [year, month, day] = date.split('-');
-    const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    const key = getDayKey(dateObj);
+    const key = getDayKey(app.selectedDate);
 
     if (!app.data[type]) app.data[type] = {};
     if (!app.data[type][key]) app.data[type][key] = [];
 
     app.data[type][key].push({
         text: text,
-        time: time || null,
+        note: note || null,
+        color: color,
+        goal: parseInt(goal),
+        repeat: repeat,
+        reminder: reminder,
         completed: false,
         created: new Date().toISOString()
     });
 
     saveData();
     closeAddModal();
-
-    // Если дата отличается от текущей, обновляем выбранную дату
-    if (date !== getDayKey(app.selectedDate)) {
-        app.selectedDate = dateObj;
-        renderCalendar();
-    }
-    
     renderContent();
 }
 
