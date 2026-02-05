@@ -510,12 +510,12 @@ function renderShoppingList() {
     const items = getItemsForDay('shopping');
     
     if (items.length === 0) {
-        list.innerHTML = '<div class="empty-message">Нет позиций в списке</div>';
+        list.innerHTML = '<div class="empty-message">Нет покупок на этот день</div>';
         return;
     }
 
-    list.innerHTML = items.map((item, index) => {
-        if (item.items) {
+    const content = items.map((item, index) => {
+        if (item.items && item.items.length > 0) {
             const itemsHtml = item.items.map((subitem, subindex) => `
                 <div class="list-item">
                     <button type="button" class="list-checkbox-btn" onclick="toggleListItem('shopping', ${index}, ${subindex}); event.stopPropagation();" style="background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center;">
@@ -524,10 +524,12 @@ function renderShoppingList() {
                     <span onclick="editList('shopping', ${index}); event.stopPropagation();" style="cursor: pointer; flex: 1;">${escapeHtml(subitem.text)}</span>
                 </div>
             `).join('');
-            return `<div class="list-container">${itemsHtml}</div>`;
+            return itemsHtml ? `<div class="list-container">${itemsHtml}</div>` : '';
         }
         return '';
     }).join('');
+
+    list.innerHTML = content || '<div class="empty-message">Нет покупок на этот день</div>';
 }
 
 // Рендеринг списка уборки
@@ -536,12 +538,12 @@ function renderCleaningList() {
     const items = getItemsForDay('cleaning');
     
     if (items.length === 0) {
-        list.innerHTML = '<div class="empty-message">Нет задач уборки</div>';
+        list.innerHTML = '<div class="empty-message">Нет задач уборки на этот день</div>';
         return;
     }
 
-    list.innerHTML = items.map((item, index) => {
-        if (item.items) {
+    const content = items.map((item, index) => {
+        if (item.items && item.items.length > 0) {
             const itemsHtml = item.items.map((subitem, subindex) => `
                 <div class="list-item">
                     <button type="button" class="list-checkbox-btn" onclick="toggleListItem('cleaning', ${index}, ${subindex}); event.stopPropagation();" style="background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center;">
@@ -550,10 +552,12 @@ function renderCleaningList() {
                     <span onclick="editList('cleaning', ${index}); event.stopPropagation();" style="cursor: pointer; flex: 1;">${escapeHtml(subitem.text)}</span>
                 </div>
             `).join('');
-            return `<div class="list-container">${itemsHtml}</div>`;
+            return itemsHtml ? `<div class="list-container">${itemsHtml}</div>` : '';
         }
         return '';
     }).join('');
+
+    list.innerHTML = content || '<div class="empty-message">Нет задач уборки на этот день</div>';
 }
 
 // Открытие модального окна добавления
@@ -929,7 +933,9 @@ function deleteListItem(index) {
     const item = items[app.editingNoteId];
     if (item.items) {
         item.items.splice(index, 1);
-        editList(app.editingNoteType, app.editingNoteId);
+        saveData();
+        closeEditListModal();
+        renderContent();
     }
 }
 function updateEditListCharCount() {
